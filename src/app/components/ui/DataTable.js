@@ -1,7 +1,7 @@
 const DataTable = ({ columns = [], data = [] }) => {
 	return (
 		<div className='overflow-x-auto'>
-			<table className='min-w-full divide-y divide-gray-200'>
+			<table className='min-w-full divide-y divide-gray-200'>	
 				<thead className='bg-gray-50'>
 					<tr>
 						{columns.map((column, columnIndex) => (
