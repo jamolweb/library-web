@@ -1,96 +1,72 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import toast from "react-hot-toast";
+import axios from 'axios'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 
-export default function Login() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const router = useRouter();
+export default function LoginPage() {
+	const [formData, setFormData] = useState({ username: '', password: '' })
+	const [error, setError] = useState(null)
+	const router = useRouter()
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ username, password }),
-      });
+	const handleChange = e => {
+		const { name, value } = e.target
+		setFormData({ ...formData, [name]: value })
+	}
 
-      const data = await response.json();
+	const handleSubmit = async e => {
+		e.preventDefault()
+		try {
+			const response = await axios.post('/api/auth/login', formData)
+			localStorage.setItem('token', response.data.token) // Save JWT
+			router.push('/dashboard') // Redirect to dashboard
+		} catch (err) {
+			setError(err.response?.data?.error || 'Login failed. Try again.')
+		}
+	}
 
-      if (!response.ok) {
-        throw new Error(data.error || "Login failed");
-      }
-
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("teacher", JSON.stringify(data.teacher));
-
-      toast.success("Login successful");
-      router.push("/dashboard");
-    } catch (error) {
-      toast.error(error.message);
-    }
-  };
-
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Library Management System
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Sign in to access your dashboard
-          </p>
-        </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="rounded-md shadow-sm -space-y-px">
-            <div>
-              <label htmlFor="username" className="sr-only">
-                Username
-              </label>
-              <input
-                id="username"
-                name="username"
-                type="text"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-              />
-            </div>
-            <div>
-              <label htmlFor="password" className="sr-only">
-                Password
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div>
-            <button
-              type="submit"
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            >
-              Sign in
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
+	return (
+		<div className='flex items-center justify-center h-screen bg-gray-100'>
+			<div className='bg-white shadow-md rounded px-8 pt-6 pb-8 w-96'>
+				<h2 className='text-xl font-bold mb-4 text-center'>Login</h2>
+				{error && <p className='text-red-500 text-sm mb-4'>{error}</p>}
+				<form onSubmit={handleSubmit}>
+					<div className='mb-4'>
+						<label className='block text-gray-700 text-sm font-bold mb-2'>
+							Username
+						</label>
+						<input
+							type='text'
+							name='username'
+							value={formData.username}
+							onChange={handleChange}
+							className='w-full px-3 py-2 border rounded'
+							placeholder='Enter your username'
+							required
+						/>
+					</div>
+					<div className='mb-6'>
+						<label className='block text-gray-700 text-sm font-bold mb-2'>
+							Password
+						</label>
+						<input
+							type='password'
+							name='password'
+							value={formData.password}
+							onChange={handleChange}
+							className='w-full px-3 py-2 border rounded'
+							placeholder='Enter your password'
+							required
+						/>
+					</div>
+					<button
+						type='submit'
+						className='bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 w-full'
+					>
+						Login
+					</button>
+				</form>
+			</div>
+		</div>
+	)
 }
