@@ -1,80 +1,79 @@
 // src/app/api/books/route.js
-import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
-import { verifyAuth } from "@/lib/auth";
+import { verifyAuth } from '@/lib/auth'
+import prisma from '@/lib/prisma'
+import { NextResponse } from 'next/server'
 
 export async function GET(request) {
-  try {
-    // Verify JWT token
-    const authResult = await verifyAuth(request);
-    if (!authResult.success) {
-      return NextResponse.json({ error: authResult.error }, { status: 401 });
-    }
+	try {
+		// Verify JWT token
+		const authResult = await verifyAuth(request)
+		if (!authResult.success) {
+			return NextResponse.json({ error: authResult.error }, { status: 401 })
+		}
 
-    const books = await prisma.book.findMany();
+		const books = await prisma.book.findMany()
 
-    return NextResponse.json(books);
-  } catch (error) {
-    console.log(error);
+		return NextResponse.json(books)
+	} catch (error) {
+		console.log(error)
 
-    return NextResponse.json(
-      { error: "Failed to fetch books" },
-      { status: 500 }
-    );
-  }
+		return NextResponse.json(
+			{ error: 'Failed to fetch books' },
+			{ status: 500 }
+		)
+	}
 }
 
 export async function POST(request) {
-  try {
-    const authResult = await verifyAuth(request);
-    console.log(authResult);
+	try {
+		const authResult = await verifyAuth(request)
+		console.log(authResult)
 
-    if (authResult.role === "teacher") {
-      return NextResponse.json({ error: authResult.error }, { status: 401 });
-    }
+		if (authResult.role === 'teacher') {
+			return NextResponse.json({ error: authResult.error }, { status: 401 })
+		}
 
-    const { title, author, isbn, quantity } = await request.json();
+		const { title, author, quantity } = await request.json()
 
-    // Convert quantity to integer
-    const quantityInt = parseInt(quantity, 10);
+		// Convert quantity to integer
+		const quantityInt = parseInt(quantity, 10)
 
-    // Validate input
-    if (!title || !author || !isbn || quantityInt < 1) {
-      return NextResponse.json(
-        { error: "All fields are required and quantity must be at least 1" },
-        { status: 400 }
-      );
-    }
+		// Validate input
+		if (!title || !author || quantityInt < 1) {
+			return NextResponse.json(
+				{ error: 'All fields are required and quantity must be at least 1' },
+				{ status: 400 }
+			)
+		}
 
-    // Check if the book already exists
-    const existingBook = await prisma.book.findUnique({
-      where: { isbn },
-    });
+		// Check if a book with the same title already exists
+		const existingBooks = await prisma.book.findMany({
+			where: { title: title },
+		})
 
-    if (existingBook) {
-      return NextResponse.json(
-        { error: "Book with this ISBN already exists" },
-        { status: 409 }
-      );
-    }
+		if (existingBooks.length > 0) {
+			return NextResponse.json(
+				{ error: 'Book with this title already exists.' },
+				{ status: 400 }
+			)
+		}
 
-    const book = await prisma.book.create({
-      data: {
-        title,
-        author,
-        isbn,
-        quantity: quantityInt,
-        available: quantityInt,
-      },
-    });
+		const book = await prisma.book.create({
+			data: {
+				title,
+				author,
+				quantity: quantityInt,
+				available: quantityInt,
+			},
+		})
 
-    return NextResponse.json(book, { status: 201 });
-  } catch (error) {
-    console.log(error);
+		return NextResponse.json(book, { status: 201 })
+	} catch (error) {
+		console.log(error)
 
-    return NextResponse.json(
-      { error: "Failed to create book" },
-      { status: 500 }
-    );
-  }
+		return NextResponse.json(
+			{ error: 'Failed to create book' },
+			{ status: 500 }
+		)
+	}
 }

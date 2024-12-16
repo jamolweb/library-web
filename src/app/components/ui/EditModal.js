@@ -7,12 +7,10 @@ const StudentSchema = z.object({
 	id: z.string().optional(),
 	fullName: z
 		.string()
-		.min(2, { message: 'Full name must be at least 2 characters' }),
+		.min(2, { message: 'Full name must be at least 2 characters long' }),
 	description: z.string().optional(),
-	phoneNumber: z
-		.string()
-		.regex(/^\+?[1-9]\d{1,14}$/, { message: 'Invalid phone number' }),
-	grade: z.string().regex(/^[A-F][-+]?$/, { message: 'Invalid grade format' }),
+	phoneNumber: z.string().optional(),
+	grade: z.string().optional(),
 })
 
 export default function EditModal({ isOpen, onClose, student, onSave }) {
@@ -23,6 +21,7 @@ export default function EditModal({ isOpen, onClose, student, onSave }) {
 		grade: '',
 	})
 	const [errors, setErrors] = useState({})
+	const [isSubmitting, setIsSubmitting] = useState(false)
 
 	useEffect(() => {
 		if (student) {
@@ -33,8 +32,15 @@ export default function EditModal({ isOpen, onClose, student, onSave }) {
 				phoneNumber: student.phoneNumber || '',
 				grade: student.grade || '',
 			})
-			setErrors({})
+		} else {
+			setFormData({
+				fullName: '',
+				description: '',
+				phoneNumber: '',
+				grade: '',
+			})
 		}
+		setErrors({})
 	}, [student])
 
 	const handleChange = e => {
@@ -43,9 +49,11 @@ export default function EditModal({ isOpen, onClose, student, onSave }) {
 
 		try {
 			StudentSchema.pick({ [name]: true }).parse({ [name]: value })
-			const newErrors = { ...errors }
-			delete newErrors[name]
-			setErrors(newErrors)
+			setErrors(prev => {
+				const newErrors = { ...prev }
+				delete newErrors[name]
+				return newErrors
+			})
 		} catch (error) {
 			if (error instanceof z.ZodError) {
 				setErrors(prev => ({
@@ -56,21 +64,28 @@ export default function EditModal({ isOpen, onClose, student, onSave }) {
 		}
 	}
 
-	const handleSubmit = e => {
+	const handleSubmit = async e => {
 		e.preventDefault()
+		setIsSubmitting(true)
 
 		try {
 			const validatedData = StudentSchema.parse(formData)
-			onSave(validatedData)
-			onClose()
+			const success = await onSave(validatedData)
+			if (success) {
+				onClose()
+			}
 		} catch (error) {
 			if (error instanceof z.ZodError) {
 				const formErrors = error.errors.reduce((acc, curr) => {
 					acc[curr.path[0]] = curr.message
 					return acc
-				})
+				}, {})
 				setErrors(formErrors)
+			} else {
+				console.error('Error submitting form:', error)
 			}
+		} finally {
+			setIsSubmitting(false)
 		}
 	}
 
@@ -147,14 +162,17 @@ export default function EditModal({ isOpen, onClose, student, onSave }) {
 							type='button'
 							onClick={onClose}
 							className='px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition'
+							disabled={isSubmitting}
 						>
 							Cancel
 						</button>
 						<button
 							type='submit'
-							className='px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition'
+							className='px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition disabled:opacity-50'
+							disabled={isSubmitting}
+							onClick={() => onSave(formData)}
 						>
-							Save
+							{isSubmitting ? 'Saving...' : 'Save'}
 						</button>
 					</div>
 				</form>

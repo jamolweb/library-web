@@ -74,7 +74,7 @@ export async function PUT(request, { params }) {
 		const validatedData = BookUpdateSchema.parse(body)
 
 		const updatedBook = await prisma.book.update({
-			where: { id },
+			where: { id: Number(id) },
 			data: validatedData,
 		})
 

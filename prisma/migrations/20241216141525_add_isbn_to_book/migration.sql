@@ -6,7 +6,6 @@ CREATE TABLE "Book" (
     "id" SERIAL NOT NULL,
     "title" TEXT NOT NULL,
     "author" TEXT NOT NULL,
-    "isbn" TEXT NOT NULL,
     "quantity" INTEGER NOT NULL DEFAULT 1,
     "available" INTEGER NOT NULL DEFAULT 1,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -20,7 +19,7 @@ CREATE TABLE "Student" (
     "id" SERIAL NOT NULL,
     "fullName" TEXT NOT NULL,
     "description" TEXT,
-    "phoneNumber" TEXT,
+    "phoneNumber" TEXT NOT NULL,
     "grade" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -54,9 +53,6 @@ CREATE TABLE "Borrowing" (
 
     CONSTRAINT "Borrowing_pkey" PRIMARY KEY ("id")
 );
-
--- CreateIndex
-CREATE UNIQUE INDEX "Book_isbn_key" ON "Book"("isbn");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Teacher_username_key" ON "Teacher"("username");
