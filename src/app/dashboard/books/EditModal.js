@@ -1,38 +1,12 @@
 'use client'
 
-import axios from 'axios'
 import { useEffect, useState } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
 import { toast } from 'react-hot-toast'
-import { z } from 'zod'
-
-const BookSchema = z.object({
-	id: z.number().optional(),
-	title: z
-		.string()
-		.min(2, { message: 'Title must be at least 2 characters long' }),
-	author: z
-		.string()
-		.min(2, { message: 'Author must be at least 2 characters long' }),
-	quantity: z
-		.number()
-		.min(0, { message: 'Quantity must be a positive number' }),
-	available: z
-		.number()
-		.min(0, { message: 'Available must be a positive number' }),
-})
-function ErrorFallback({ error, resetErrorBoundary }) {
-	return (
-		<div role='alert'>
-			<p>Something went wrong:</p>
-			<pre>{error.message}</pre>
-			<button onClick={resetErrorBoundary}>Try again</button>
-		</div>
-	)
-}
 
 export default function EditModal({ isOpen, onClose, book, onSave }) {
 	const [formData, setFormData] = useState({
+		id: '',
 		title: '',
 		author: '',
 		quantity: 0,
@@ -44,7 +18,7 @@ export default function EditModal({ isOpen, onClose, book, onSave }) {
 	useEffect(() => {
 		if (book) {
 			setFormData({
-				id: book.id,
+				id: book.id || '',
 				title: book.title || '',
 				author: book.author || '',
 				quantity: book.quantity || 0,
@@ -52,6 +26,7 @@ export default function EditModal({ isOpen, onClose, book, onSave }) {
 			})
 		} else {
 			setFormData({
+				id: '',
 				title: '',
 				author: '',
 				quantity: 0,
@@ -66,51 +41,45 @@ export default function EditModal({ isOpen, onClose, book, onSave }) {
 		const numberFields = ['quantity', 'available']
 		const newValue = numberFields.includes(name) ? Number(value) : value
 		setFormData(prev => ({ ...prev, [name]: newValue }))
-
-		try {
-			BookSchema.pick({ [name]: true }).parse({ [name]: newValue })
-			setErrors(prev => {
-				const newErrors = { ...prev }
-				delete newErrors[name]
-				return newErrors
-			})
-		} catch (error) {
-			if (error instanceof z.ZodError) {
-				setErrors(prev => ({
-					...prev,
-					[name]: error.errors[0].message,
-				}))
-			}
-		}
 	}
 
-	const handleSubmit = async e => {
-		e.preventDefault()
+	const validateForm = () => {
+		const newErrors = {}
+		if (!formData.title || formData.title.length < 2) {
+			newErrors.title = 'Title must be at least 2 characters long'
+		}
+		if (!formData.author || formData.author.length < 2) {
+			newErrors.author = 'Author must be at least 2 characters long'
+		}
+		if (formData.quantity < 0) {
+			newErrors.quantity = 'Quantity must be a positive number'
+		}
+		if (formData.available < 0) {
+			newErrors.available = 'Available must be a positive number'
+		}
+		return newErrors
+	}
+
+	const handleSave = async () => {
+		console.log('Save button clicked')
+		console.log('Form data before validation:', formData)
+
 		setIsSubmitting(true)
+		const validationErrors = validateForm()
+		if (Object.keys(validationErrors).length > 0) {
+			setErrors(validationErrors)
+			setIsSubmitting(false)
+			return
+		}
 
 		try {
-			const validatedData = BookSchema.parse(formData)
-			const success = await onSave(validatedData)
+			const success = await onSave(formData)
 			if (success) {
 				onClose()
 			}
 		} catch (error) {
-			if (error instanceof z.ZodError) {
-				const formErrors = error.errors.reduce((acc, curr) => {
-					acc[curr.path[0]] = curr.message
-					return acc
-				}, {})
-				setErrors(formErrors)
-			} else if (axios.isAxiosError(error)) {
-				if (error.response?.status === 500) {
-					toast.error('Server error. Please try again later.')
-				} else {
-					toast.error('An error occurred. Please try again.')
-				}
-			} else {
-				console.error('Error submitting form:', error)
-				toast.error('An unexpected error occurred. Please try again.')
-			}
+			console.error('Error saving book:', error)
+			toast.error('An unexpected error occurred. Please try again.')
 		} finally {
 			setIsSubmitting(false)
 		}
@@ -120,9 +89,16 @@ export default function EditModal({ isOpen, onClose, book, onSave }) {
 
 	return (
 		<ErrorBoundary
-			FallbackComponent={ErrorFallback}
+			FallbackComponent={({ error, resetErrorBoundary }) => (
+				<div role='alert'>
+					<p>Something went wrong:</p>
+					<pre>{error.message}</pre>
+					<button onClick={resetErrorBoundary}>Try again</button>
+				</div>
+			)}
 			onReset={() => {
 				setFormData({
+					id: '',
 					title: '',
 					author: '',
 					quantity: 0,
@@ -135,7 +111,8 @@ export default function EditModal({ isOpen, onClose, book, onSave }) {
 					<h2 className='text-2xl font-bold mb-6 text-center'>
 						{book ? 'Edit Book' : 'Add Book'}
 					</h2>
-					<form onSubmit={handleSubmit} className='space-y-4'>
+					<div className='space-y-4'>
+						{/* Title Input */}
 						<div>
 							<label className='block mb-2 font-medium'>Title</label>
 							<input
@@ -152,6 +129,7 @@ export default function EditModal({ isOpen, onClose, book, onSave }) {
 							)}
 						</div>
 
+						{/* Author Input */}
 						<div>
 							<label className='block mb-2 font-medium'>Author</label>
 							<input
@@ -168,6 +146,7 @@ export default function EditModal({ isOpen, onClose, book, onSave }) {
 							)}
 						</div>
 
+						{/* Quantity Input */}
 						<div>
 							<label className='block mb-2 font-medium'>Quantity</label>
 							<input
@@ -184,6 +163,7 @@ export default function EditModal({ isOpen, onClose, book, onSave }) {
 							)}
 						</div>
 
+						{/* Available Input */}
 						<div>
 							<label className='block mb-2 font-medium'>Available</label>
 							<input
@@ -200,6 +180,7 @@ export default function EditModal({ isOpen, onClose, book, onSave }) {
 							)}
 						</div>
 
+						{/* Action Buttons */}
 						<div className='flex justify-end space-x-4 mt-6'>
 							<button
 								type='button'
@@ -210,14 +191,15 @@ export default function EditModal({ isOpen, onClose, book, onSave }) {
 								Cancel
 							</button>
 							<button
-								type='submit'
+								type='button'
+								onClick={handleSave}
 								className='px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition disabled:opacity-50'
 								disabled={isSubmitting}
 							>
 								{isSubmitting ? 'Saving...' : 'Save'}
 							</button>
 						</div>
-					</form>
+					</div>
 				</div>
 			</div>
 		</ErrorBoundary>

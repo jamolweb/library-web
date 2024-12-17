@@ -86,6 +86,7 @@ export default function ManageBooks() {
 	}
 
 	const handleSave = async updatedBook => {
+		console.log('Saving book:', updatedBook)
 		try {
 			const token = localStorage.getItem('token')
 			const url = updatedBook.id ? `/api/books/${updatedBook.id}` : '/api/books'
