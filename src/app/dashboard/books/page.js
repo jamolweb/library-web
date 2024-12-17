@@ -89,11 +89,16 @@ export default function ManageBooks() {
 		try {
 			const token = localStorage.getItem('token')
 			const url = updatedBook.id ? `/api/books/${updatedBook.id}` : '/api/books'
-			console.log({ url, updatedBook })
+
+			const bookData = {
+				...updatedBook,
+				quantity: Number(updatedBook.quantity),
+				available: Number(updatedBook.available),
+			}
 
 			const method = updatedBook.id ? 'put' : 'post'
 
-			const response = await axios[method](url, updatedBook, {
+			const response = await axios[method](url, bookData, {
 				headers: {
 					Authorization: `Bearer ${token}`,
 					'Content-Type': 'application/json',
@@ -113,17 +118,11 @@ export default function ManageBooks() {
 			setEditModalOpen(false)
 			return true
 		} catch (error) {
-			if (axios.isAxiosError(error)) {
-				if (error.response?.status === 500) {
-					toast.error('Server error. Please try again later.')
-				} else {
-					toast.error(
-						`Error: ${error.response?.data?.message || 'An error occurred'}`
-					)
-				}
+			console.error('Error saving book:', error)
+			if (error.response?.data?.message) {
+				toast.error(error.response.data.message)
 			} else {
-				console.error('Error saving book:', error)
-				toast.error('An unexpected error occurred. Please try again.')
+				toast.error('Failed to save book. Please try again.')
 			}
 			return false
 		}

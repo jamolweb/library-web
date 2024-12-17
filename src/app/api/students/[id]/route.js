@@ -134,21 +134,13 @@ export async function DELETE(request, { params }) {
 			return NextResponse.json({ error: authResult.error }, { status: 401 })
 		}
 
-		const { id } = await params
-		const studentId = parseInt(id, 10)
+		const { id } = params
 
-		if (isNaN(studentId)) {
-			return NextResponse.json(
-				{ message: 'Invalid student ID' },
-				{ status: 400 }
-			)
-		}
-
+		// Delete the student directly using the string ID
 		await prisma.student.delete({
-			where: { id: studentId },
+			where: { id },
 		})
 
-		// For 204 status, return NextResponse directly without json
 		return new NextResponse(null, { status: 204 })
 	} catch (error) {
 		return handleError(error)

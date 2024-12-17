@@ -6,6 +6,13 @@ import { z } from 'zod'
 // Input validation schema
 const BookUpdateSchema = z.object({
 	title: z.string().min(1, { message: 'Title is required' }),
+	author: z.string().min(1, { message: 'Author is required' }),
+	quantity: z
+		.number()
+		.min(0, { message: 'Quantity must be a positive number' }),
+	available: z
+		.number()
+		.min(0, { message: 'Available must be a positive number' }),
 	description: z.string().optional(),
 })
 
@@ -73,6 +80,15 @@ export async function PUT(request, { params }) {
 		// Validate input
 		const validatedData = BookUpdateSchema.parse(body)
 
+		// Check if book exists
+		const existingBook = await prisma.book.findUnique({
+			where: { id },
+		})
+
+		if (!existingBook) {
+			return NextResponse.json({ error: 'Book not found' }, { status: 404 })
+		}
+
 		const updatedBook = await prisma.book.update({
 			where: { id },
 			data: validatedData,
@@ -80,6 +96,7 @@ export async function PUT(request, { params }) {
 
 		return NextResponse.json(updatedBook)
 	} catch (error) {
+		console.error('Update error:', error)
 		return handleError(error)
 	}
 }
