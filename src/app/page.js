@@ -15,6 +15,8 @@ export default function Home() {
 		}
 	}, [router])
 
+	console.log('motherfuckers')
+
 	// Return null or a loading indicator while redirecting
 	return (
 		<div className='min-h-screen flex items-center justify-center'>
