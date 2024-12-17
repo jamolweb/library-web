@@ -1,0 +1,46 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches:
+      - main  # Adjust to your branch name if needed
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy and Restart PM2
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up SSH keys
+      run: |
+        # Install SSH private key from GitHub Secrets
+        mkdir -p ~/.ssh
+        install -m 600 -D /dev/null ~/.ssh/id_rsa
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+        
+        # Add the VPS's SSH fingerprint to known hosts to avoid SSH warnings
+        ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+
+    - name: Run deploy on VPS
+      run: |
+        ssh -i ~/.ssh/id_rsa ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << EOF
+          cd ${{ secrets.WORK_DIR }}  # Change to your project directory
+          
+          # Ensure SSH agent is loaded (in case your SSH private key isn't working directly)
+          eval $(ssh-agent -s)
+          ssh-add ~/.ssh/id_rsa
+          
+          # Run the deploy command
+          git pull
+          npm install
+          npm run build
+          npx pm2 restart library_01_web
+          exit
+        EOF
+
+    - name: Cleanup SSH keys
+      run: rm -rf ~/.ssh
