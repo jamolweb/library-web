@@ -74,7 +74,7 @@ export async function PUT(request, { params }) {
 		const validatedData = BookUpdateSchema.parse(body)
 
 		const updatedBook = await prisma.book.update({
-			where: { id: Number(id) },
+			where: { id },
 			data: validatedData,
 		})
 
@@ -93,9 +93,15 @@ export async function DELETE(request, { params }) {
 
 		const { id } = params
 
-		await prisma.book.delete({
-			where: { id },
-		})
+		// First, delete all related borrowings
+		await prisma.$transaction([
+			prisma.borrowing.deleteMany({
+				where: { bookId: id },
+			}),
+			prisma.book.delete({
+				where: { id },
+			}),
+		])
 
 		return NextResponse.json(
 			{ message: 'Book deleted successfully' },

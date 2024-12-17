@@ -89,14 +89,7 @@ export async function PUT(request, { params }) {
 	}
 
 	try {
-		const studentId = parseInt(params.id, 10)
-		if (isNaN(studentId)) {
-			return NextResponse.json(
-				{ message: 'Invalid student ID' },
-				{ status: 400 }
-			)
-		}
-
+		const { id } = params
 		const body = await request.json()
 
 		// Validate input
@@ -104,7 +97,7 @@ export async function PUT(request, { params }) {
 
 		// Check if student exists before updating
 		const existingStudent = await prisma.student.findUnique({
-			where: { id: studentId },
+			where: { id },
 		})
 
 		if (!existingStudent) {
@@ -115,7 +108,7 @@ export async function PUT(request, { params }) {
 		}
 
 		const updatedStudent = await prisma.student.update({
-			where: { id: studentId },
+			where: { id },
 			data: validatedData,
 			select: {
 				id: true,
