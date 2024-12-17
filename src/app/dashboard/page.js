@@ -88,12 +88,26 @@ export default function Dashboard() {
 		{
 			header: 'Borrow Date',
 			accessor: 'borrowDate',
-			cell: row => format(new Date(row.borrowDate), 'MMM dd, yyyy'),
+			cell: row => {
+				if (!row.borrowDate) return 'N/A'
+				try {
+					return format(new Date(row.borrowDate), 'MMM dd, yyyy')
+				} catch (error) {
+					return 'Invalid date'
+				}
+			},
 		},
 		{
 			header: 'Due Date',
 			accessor: 'dueDate',
-			cell: row => format(new Date(row.dueDate), 'MMM dd, yyyy'),
+			cell: row => {
+				if (!row.dueDate) return 'N/A'
+				try {
+					return format(new Date(row.dueDate), 'MMM dd, yyyy')
+				} catch (error) {
+					return 'Invalid date'
+				}
+			},
 		},
 		{
 			header: 'Status',

@@ -1,88 +1,96 @@
-import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
-import { verifyAuth } from "@/lib/auth";
+import prisma from '@/lib/prisma'
+import { NextResponse } from 'next/server'
 
 // Get all borrowings
 export async function GET(request) {
-  try {
-    const verified = await verifyAuth(request);
-    if (!verified) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+	try {
+		// Get searchParams from URL
+		const { searchParams } = new URL(request.url)
+		const studentId = searchParams.get('studentId')
+		const status = searchParams.get('status')
+		const search = searchParams.get('search')
 
-    const borrowings = await prisma.borrowing.findMany({
-      include: {
-        book: true,
-        student: true,
-      },
-    });
+		// Build the where clause
+		const where = {
+			...(studentId && { studentId }),
+			...(status && { status }),
+			...(search && {
+				OR: [
+					{
+						student: {
+							fullName: {
+								contains: search,
+								mode: 'insensitive',
+							},
+						},
+					},
+					{
+						book: {
+							title: {
+								contains: search,
+								mode: 'insensitive',
+							},
+						},
+					},
+				],
+			}),
+		}
 
-    return NextResponse.json(borrowings);
-  } catch (error) {
-    return NextResponse.json(
-      { error: "Failed to fetch borrowings" },
-      { status: 500 }
-    );
-  }
+		const borrowings = await prisma.borrowing.findMany({
+			where,
+			include: {
+				student: true,
+				book: true,
+			},
+		})
+
+		return NextResponse.json(borrowings)
+	} catch (error) {
+		console.log(error)
+
+		return NextResponse.json(
+			{ error: 'Failed to fetch borrowings' },
+			{ status: 500 }
+		)
+	}
 }
 
 // Create a new borrowing
 export async function POST(request) {
-  try {
-    const verified = await verifyAuth(request);
-    if (!verified) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+	try {
+		const { studentId, bookId, quantity = 1 } = await request.json()
 
-    const { bookId, studentId, dueDate } = await request.json();
+		// Start a transaction
+		const result = await prisma.$transaction(async prisma => {
+			// Check book availability
+			const book = await prisma.book.findUnique({
+				where: { id: bookId },
+			})
 
-    // Check if book is available
-    const book = await prisma.book.findUnique({
-      where: { id: bookId },
-    });
+			if (!book || book.available < quantity) {
+				throw new Error('Book not available')
+			}
 
-    if (!book || book.available < 1) {
-      return NextResponse.json(
-        { error: "Book not available" },
-        { status: 400 }
-      );
-    }
+			// Create borrowing record
+			const borrowing = await prisma.borrowing.create({
+				data: {
+					studentId,
+					bookId,
+					status: 'BORROWED',
+				},
+			})
 
-    // Create borrowing record and update book availability in a transaction
-    const borrowing = await prisma.$transaction(async (prisma) => {
-      // Create borrowing record
-      const newBorrowing = await prisma.borrowing.create({
-        data: {
-          bookId,
-          studentId,
-          dueDate: new Date(dueDate),
-          status: "BORROWED",
-        },
-        include: {
-          book: true,
-          student: true,
-        },
-      });
+			// Update book availability
+			await prisma.book.update({
+				where: { id: bookId },
+				data: { available: book.available - quantity },
+			})
 
-      // Update book availability
-      await prisma.book.update({
-        where: { id: bookId },
-        data: {
-          available: {
-            decrement: 1,
-          },
-        },
-      });
+			return borrowing
+		})
 
-      return newBorrowing;
-    });
-
-    return NextResponse.json(borrowing, { status: 201 });
-  } catch (error) {
-    console.error(error);
-    return NextResponse.json(
-      { error: "Failed to create borrowing" },
-      { status: 500 }
-    );
-  }
+		return NextResponse.json(result, { status: 201 })
+	} catch (error) {
+		return NextResponse.json({ error: error.message }, { status: 400 })
+	}
 }

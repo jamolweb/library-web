@@ -11,10 +11,23 @@ export async function GET(request) {
 			return NextResponse.json({ error: authResult.error }, { status: 401 })
 		}
 
-		const students = await prisma.student.findMany()
+		const { searchParams } = new URL(request.url)
+		const search = searchParams.get('search')
+
+		const students = await prisma.student.findMany({
+			where: search
+				? {
+						fullName: {
+							contains: search,
+							mode: 'insensitive',
+						},
+				  }
+				: {},
+		})
 
 		return NextResponse.json(students)
 	} catch (error) {
+		console.error('Failed to fetch students:', error)
 		return NextResponse.json(
 			{ error: 'Failed to fetch students' },
 			{ status: 500 }
