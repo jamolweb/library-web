@@ -1,8 +1,15 @@
+import { verifyAuth } from '@/lib/auth'
 import prisma from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 
 // Get all borrowings
 export async function GET(request) {
+	// Verify JWT token
+	const authResult = await verifyAuth(request)
+	if (!authResult.success) {
+		return NextResponse.json({ error: authResult.error }, { status: 401 })
+	}
+
 	try {
 		// Get searchParams from URL
 		const { searchParams } = new URL(request.url)
@@ -57,6 +64,12 @@ export async function GET(request) {
 
 // Create a new borrowing
 export async function POST(request) {
+	// Verify JWT token
+	const authResult = await verifyAuth(request)
+	if (!authResult.success) {
+		return NextResponse.json({ error: authResult.error }, { status: 401 })
+	}
+
 	try {
 		const { studentId, bookId, quantity = 1 } = await request.json()
 

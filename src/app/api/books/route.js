@@ -1,8 +1,15 @@
+import { verifyAuth } from '@/lib/auth'
 import prisma from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 
 export async function GET(request) {
 	try {
+		// Verify JWT token
+		const authResult = await verifyAuth(request)
+		if (!authResult.success) {
+			return NextResponse.json({ error: authResult.error }, { status: 401 })
+		}
+
 		// Get searchParams from URL
 		const { searchParams } = new URL(request.url)
 		const search = searchParams.get('search')
@@ -34,6 +41,11 @@ export async function GET(request) {
 
 export async function POST(request) {
 	try {
+		const authResult = await verifyAuth(request)
+		if (!authResult.success) {
+			return NextResponse.json({ error: authResult.error }, { status: 401 })
+		}
+
 		const { title, author, quantity } = await request.json()
 
 		// Validate required fields
