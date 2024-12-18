@@ -14,6 +14,7 @@ export default function Dashboard() {
 		students: [],
 		borrowings: [],
 		loading: true,
+		availableBooks: 0,
 	})
 	const router = useRouter()
 
@@ -30,6 +31,7 @@ export default function Dashboard() {
 					Authorization: `Bearer ${token}`,
 					'Content-Type': 'application/json',
 				}
+				let availableBooks = 0
 
 				const [booksRes, studentsRes, borrowingsRes] = await Promise.all([
 					fetch('/api/books', { headers }),
@@ -47,11 +49,14 @@ export default function Dashboard() {
 					borrowingsRes.json(),
 				])
 
+				availableBooks = books.reduce((acc, book) => acc + book.available, 0)
+
 				setStats({
 					books: Array.isArray(books) ? books : [],
 					students: Array.isArray(students) ? students : [],
 					borrowings: Array.isArray(borrowings) ? borrowings : [],
 					loading: false,
+					availableBooks: availableBooks,
 				})
 			} catch (error) {
 				console.error('Error fetching data:', error)
@@ -129,6 +134,8 @@ export default function Dashboard() {
 		},
 	]
 
+	console.log(stats.availableBooks)
+
 	return (
 		<div className='space-y-6'>
 			<div className='flex items-center justify-between'>
@@ -190,14 +197,14 @@ export default function Dashboard() {
 					<CardContent>
 						<div className='flex items-center justify-between'>
 							<div>
-								<p className='text-sm font-medium text-red-600'>
-									Overdue Books
+								<p className='text-sm font-medium text-green-600'>
+									Available Books
 								</p>
-								<p className='text-3xl font-bold text-red-900'>
-									{overdueBorrowings.length}
+								<p className='text-3xl font-bold text-green-900'>
+									{stats.availableBooks}
 								</p>
 							</div>
-							<AlertTriangle className='h-8 w-8 text-red-500' />
+							<AlertTriangle className='h-8 w-8 text-green-500' />
 						</div>
 					</CardContent>
 				</Card>
