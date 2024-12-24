@@ -1,36 +1,127 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+Some images:
+![image](https://github.com/user-attachments/assets/73c54d7d-e188-4194-bce3-a7534d2949e5)
+![image](https://github.com/user-attachments/assets/d61c6880-23fd-46ce-92f3-4fb60f79fa78)
+![image](https://github.com/user-attachments/assets/5a852840-b23f-4c17-9843-25fbcc2477cd)
+![image](https://github.com/user-attachments/assets/11e554f7-5531-4154-addf-f761157a0c1f)
+![image](https://github.com/user-attachments/assets/bf36cca7-c94d-48f4-99f7-6b905b54ddf5)
+![image](https://github.com/user-attachments/assets/baef0c31-63d5-43ba-930f-bc62abb7f828)
+![image](https://github.com/user-attachments/assets/0483df30-cb71-40d5-9228-ce56049c1d43)
+![image](https://github.com/user-attachments/assets/09044bb4-9f87-4c93-a3ef-2161e98f092f)
+![image](https://github.com/user-attachments/assets/d74f0ad9-dc95-4e04-a3c7-4bdaa7bf48bd)
 
-## Getting Started
 
-First, run the development server:
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+
+# Library Management System
+
+A modern library management system built with Next.js (App Router), Prisma, and JWT authentication. This open-source project provides an efficient way to manage books, students, and borrowings.
+
+## Features
+
+- **Authentication**: Secure login for teachers using JWT.
+- **Book Management**: CRUD operations for managing books in the library.
+- **Student Management**: CRUD operations for managing student records.
+- **Borrowing System**: Track borrowings, including statuses (BORROWED, RETURNED, OVERDUE).
+- **Responsive Design**: Optimized for both desktop and mobile views.
+- **Modular Codebase**: Clean and reusable components.
+
+## Project Structure
+
+```plaintext
+.
+├── prisma/                       # Prisma schema and migrations
+│   ├── migrations/               # Database migrations
+│   └── schema.prisma             # Prisma schema file
+├── src/
+│   ├── app/
+│   │   ├── api/                  # API routes
+│   │   │   ├── auth/             # Authentication routes
+│   │   │   ├── books/            # Book-related routes
+│   │   │   ├── borrowings/       # Borrowing-related routes
+│   │   │   └── students/         # Student-related routes
+│   │   ├── components/           # Reusable components
+│   │   │   ├── layout/           # Layout components
+│   │   │   └── ui/               # UI components
+│   │   ├── dashboard/            # Dashboard pages
+│   │   ├── globals.css           # Global styles
+│   │   ├── layout.js             # Root layout
+│   │   ├── login/                # Login page
+│   │   └── page.js               # Home page
+├── public/                       # Public assets
+├── prisma/                       # Prisma schema and migrations
+├── jest.config.js                # Jest configuration
+├── next.config.mjs               # Next.js configuration
+├── tailwind.config.mjs           # Tailwind CSS configuration
+└── README.md                     # Project documentation
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Environment Variables
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+This project requires the following environment variables:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `DATABASE_URL`: PostgreSQL connection string.
+- `JWT_SECRET`: Secret key for JWT token generation.
 
-## Learn More
+Create a `.env` file in the root directory and add the variables:
 
-To learn more about Next.js, take a look at the following resources:
+```plaintext
+DATABASE_URL=your_postgresql_connection_string
+JWT_SECRET=your_jwt_secret_key
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Installation
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/jamolweb/library-web.git
+   cd library-management-system
+   ```
 
-## Deploy on Vercel
+2. **Install dependencies**:
+   ```bash
+   npm install
+   ```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+3. **Set up the database**:
+   - Ensure PostgreSQL is running.
+   - Update the `DATABASE_URL` in your `.env` file.
+   - Run Prisma migrations:
+     ```bash
+     npx prisma migrate dev
+     ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+4. **Run the development server**:
+   ```bash
+   npm run dev
+   ```
+
+5. **Access the application**:
+   Open your browser and navigate to `http://localhost:3000`.
+
+## Usage
+
+- **Authentication**: Teachers can log in to access the dashboard.
+- **Dashboard**: Manage books, students, and borrowings through the intuitive UI.
+- **API**: RESTful endpoints for books, students, and borrowings.
+
+## Technologies Used
+
+- **Frontend**: Next.js (App Router), Tailwind CSS.
+- **Backend**: Prisma, PostgreSQL.
+- **Authentication**: JSON Web Tokens (JWT).
+- **Testing**: Jest (optional setup included).
+
+## Contribution
+
+Contributions are welcome! Please fork the repository and submit a pull request.
+
+## License
+
+This project is open-source and available under the [MIT License](LICENSE).
+
+---
+
+Built with ❤️ by [Jamoladdin](https://t.me/jamoldev).
+```
+
+Make sure to replace placeholders like `https://github.com/jamolweb/library-web.git` with your actual repository link and `Your Name` with your name.
